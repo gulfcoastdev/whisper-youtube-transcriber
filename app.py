@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import re
 import json
+import shutil
 from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO, emit
 
@@ -24,6 +25,16 @@ def extract_video_id(url):
     """Extract YouTube video ID from URL"""
     match = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', url)
     return match.group(1) if match else None
+
+def get_disk_usage():
+    """Get available disk space for monitoring"""
+    try:
+        total, used, free = shutil.disk_usage('/')
+        free_mb = free / (1024 * 1024)
+        total_mb = total / (1024 * 1024)
+        return free_mb, total_mb
+    except:
+        return None, None
 
 class ProgressHook:
     def __init__(self, socketio_instance):
@@ -76,6 +87,14 @@ def download_and_transcribe_with_progress(youtube_url, socketio_instance):
         'phase': 'download'
     })
     
+    # Check available disk space
+    free_mb, total_mb = get_disk_usage()
+    if free_mb and free_mb < 100:  # Less than 100MB free
+        raise Exception(f"Insufficient disk space: {free_mb:.0f}MB available")
+    
+    if free_mb:
+        print(f"Disk space: {free_mb:.0f}MB free of {total_mb:.0f}MB total")
+    
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             # Download audio with progress tracking
@@ -100,7 +119,16 @@ def download_and_transcribe_with_progress(youtube_url, socketio_instance):
             
             audio_file = os.path.join(temp_dir, files[0])
             file_size = os.path.getsize(audio_file)
-            print(f"Downloaded: {files[0]} ({file_size} bytes)")
+            file_size_mb = file_size / (1024 * 1024)
+            print(f"Downloaded: {files[0]} ({file_size_mb:.1f}MB)")
+            
+            # Log file info for monitoring
+            socketio_instance.emit('progress', {
+                'message': 'Download complete!',
+                'detail': f'Audio file: {file_size_mb:.1f}MB - preparing for transcription',
+                'percentage': 100,
+                'phase': 'download'
+            })
             
             # Start transcription phase
             socketio_instance.emit('progress', {
