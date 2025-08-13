@@ -249,7 +249,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         let isProcessing = false;
-        let socket = io();
+        
+        // Configure Socket.IO for both local and cloud deployment
+        const socketConfig = {
+            transports: ['websocket', 'polling'],
+            timeout: 20000,
+            forceNew: true
+        };
+        
+        // Auto-detect the correct host and protocol
+        let socket = io(socketConfig);
+        
+        // Handle connection errors
+        socket.on('connect', function() {
+            console.log('Socket.IO connected successfully');
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.error('Socket.IO connection failed:', error);
+            showError('Connection failed. Please refresh the page and try again.');
+        });
+        
+        socket.on('disconnect', function(reason) {
+            console.log('Socket.IO disconnected:', reason);
+            if (reason === 'io server disconnect') {
+                // The disconnection was initiated by the server, need to reconnect manually
+                socket.connect();
+            }
+        });
 
         function updateProgress(text, detail = '', percentage = null) {
             document.getElementById('progressText').textContent = text;

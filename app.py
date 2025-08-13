@@ -18,7 +18,15 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'whisper_transcript_app_2025'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*", 
+    async_mode='threading',
+    logger=False,  # Disable Socket.IO debug logs in production
+    engineio_logger=False,  # Disable engine.io debug logs
+    ping_timeout=60,  # Longer timeout for cloud deployments
+    ping_interval=25   # More frequent pings for reliable connection
+)
 
 
 def extract_video_id(url):
