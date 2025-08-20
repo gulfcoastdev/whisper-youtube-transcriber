@@ -1,5 +1,30 @@
 # 🎥 YouTube Transcript Extractor - Whisper AI
 
+## Quickstart
+
+### Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Requirements
+
+- Python 3.8+
+
+### Troubleshooting
+
+#### Installation Issues
+
+If installation fails, try:
+```bash
+# Error encountered: Collecting flask==2.3.3 (from -r requirements.txt (line 1))
+  Using cached flask-2.3.3-py3-none-any.whl (96 kB)
+Collecting flask-socketio==5.5.1 (from -r requirements.txt (line 2))
+  Downloading Flask...
+```
+
+
+
 A modern, real-time YouTube transcript extractor powered by yt-dlp and OpenAI Whisper AI.
 
 ## ✨ Features
